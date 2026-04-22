@@ -144,7 +144,9 @@ public:
             }
 
             if(hash.hi < layerSpotsBound[i]) {
-                return gaps.select(phf(hash.hi ^ hash.lo));
+                size_t idx = phf(hash.hi ^ hash.lo);
+                if (idx >= phf.getN()) return (uint64_t)-1;
+                return gaps.select(idx);
             }
 
             hash = Hash128(bytehamster::util::remix(hash.hi),bytehamster::util::remix(hash.lo));
@@ -152,7 +154,11 @@ public:
             offset += cur_buckets;
         }
 
-        return gaps.select(phf(hash.hi ^ hash.lo));
+        {
+            size_t idx = phf(hash.hi ^ hash.lo);
+            if (idx >= phf.getN()) return (uint64_t)-1;
+            return gaps.select(idx);
+        }
     }
 
     size_t count_bits() const {
