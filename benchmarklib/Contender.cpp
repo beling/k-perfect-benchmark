@@ -1,6 +1,7 @@
 #include "Contender.h"
 
 #include <unistd.h>
+#include <chrono>
 
 std::vector<std::string> generateInputData(size_t N, uint64_t seed) {
     std::vector<std::string> inputData;
@@ -16,6 +17,29 @@ void Contender::generateKeys(uint64_t seed) {
     //auto rng = std::default_random_engine {};
     //std::shuffle(std::begin(keys), std::end(keys), rng);
 }
+
+void Contender::performTest() {
+  double eps = 1.0001; // Rounding with load factor variables
+  std::vector<unsigned> taken(M * eps);
+  for (size_t i = 0; i < N; i++) {
+    // Some contenders expect non-const keys but actually use them as const.
+    size_t retrieved = keyValue(i);
+    if (retrieved > M * eps) {
+      std::cout << "Error: Range wrong. Hash function returned " << retrieved
+                << " but maximum should be " << (M * eps) << " (actually " << M
+                << ")" << std::endl;
+      throw std::logic_error("Range wrong");
+    }
+    if (taken[retrieved] >= k_contender) {
+      std::cout << "Error: More than k collisions: Key #" << i << "/" << N
+                << " resulted in " << retrieved << std::endl;
+      std::cout << "Aborting query" << std::endl;
+      throw std::logic_error("Collision");
+    }
+    taken[retrieved]++;
+  }
+}
+
 
 void Contender::run(bool shouldPrintResult) {
     if (seed == 0) {
@@ -89,3 +113,4 @@ size_t Contender::numThreads = 1;
 size_t Contender::numQueryThreads = 1;
 size_t Contender::seed = 0;
 bool Contender::skipTests = false;
+

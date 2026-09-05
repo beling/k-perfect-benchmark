@@ -43,7 +43,7 @@ class ThresholdBasedBumpingOldContender : public Contender {
         }
 
         size_t keyValue(size_t key_index) override {
-            kphf->operator()(bytehamster::util::MurmurHash64(keys[key_index]))
+            return kphf->operator()(bytehamster::util::MurmurHash64(keys[key_index]));
         }
 };
 

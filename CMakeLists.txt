@@ -5,6 +5,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
+# This project does not use C++20/23 modules. Disable CMake's automatic C++
+# module dependency scanning, which otherwise injects compiler-specific flags
+# (-fmodules-ts, -fmodule-mapper=..., -fdeps-format=p1689r5) into every
+# compile command. These flags are only understood by GCC and are rejected by
+# clang/clangd (e.g. when parsing headers from the compilation database).
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release" AND PROJECT_IS_TOP_LEVEL)
     add_compile_options(-march=native)
 endif()
