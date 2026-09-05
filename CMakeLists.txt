@@ -64,14 +64,29 @@ add_library(Kphf::ThresholdBasedBumping ALIAS KphfThresholdBasedBumping)
 
 #################### Benchmarks ####################
 if(PROJECT_IS_TOP_LEVEL)
-    add_library(Contender SHARED benchmarklib/Contender.cpp)
+    # ============= Rust stuff =============
+    file(GLOB_RECURSE RustSourceFiles "${CMAKE_SOURCE_DIR}/rust/src/**.rs")
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/target/release/libmphf_experiments.a
+        COMMAND bash -c "RUSTFLAGS='-C target-cpu=native -C linker=${CMAKE_C_COMPILER}' \
+                        CARGO_TARGET_DIR='${CMAKE_CURRENT_BINARY_DIR}/target' \
+                        cargo build --release"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rust
+        DEPENDS ${RustSourceFiles} "${CMAKE_SOURCE_DIR}/rust/Cargo.toml")
+    add_custom_target(RustCompilation DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/target/release/libmphf_experiments.a")
+    add_library(RustCompetitors STATIC IMPORTED)
+    set_property(TARGET RustCompetitors PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/target/release/libmphf_experiments.a")
+    add_dependencies(RustCompetitors RustCompilation)
+       
+    add_library(Contender SHARED benchmarklib/Contender.cpp benchmarklib/RustContender.cpp)
     target_link_libraries(Contender PUBLIC ByteHamster::Util)
-    target_include_directories(Contender PUBLIC benchmarklib)
+    target_include_directories(Contender PUBLIC benchmarklib RustCompetitors)
 
     add_library(PerfectHashingCompetitors INTERFACE)
     target_include_directories(PerfectHashingCompetitors INTERFACE contenders)
     target_link_libraries(PerfectHashingCompetitors INTERFACE ByteHamster::Util)
     target_link_libraries(PerfectHashingCompetitors INTERFACE Kphf::PaCHash Kphf::RecSplit Kphf::HashDisplace Kphf::ThresholdBasedBumping)
+    target_link_libraries(PerfectHashingCompetitors INTERFACE RustCompetitors)
     target_include_directories(PerfectHashingCompetitors INTERFACE extlib/consensus-recsplit/include)
 
     file(GLOB cmphSources extlib/cmph/src/**.c)
@@ -109,3 +124,4 @@ if(PROJECT_IS_TOP_LEVEL)
     add_executable(UnstableBucketFunction src/muericalIntegrationBucketFunction.cpp)
     target_compile_features(UnstableBucketFunction PRIVATE cxx_std_23)
 endif()
+

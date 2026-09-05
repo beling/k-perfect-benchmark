@@ -5,3 +5,5 @@ cmake-build-*
 spack.lock
 out
 build
+target/
+Cargo.lock
