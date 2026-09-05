@@ -21,7 +21,7 @@ class ThresholdBasedBumpingContender : public Contender {
                     + " packing=" + std::to_string(packing);
         }
 
-        void construct(const std::vector<std::string> &keys) override {
+        void construct() override {
             kphf = ThresholdBasedBumping(keys, overload);
         }
 
@@ -29,18 +29,15 @@ class ThresholdBasedBumpingContender : public Contender {
             return kphf.count_bits();
         }
 
-        void performQueries(const std::span<std::string> keys) override {
+        void performQueries() override {
             auto x = [&] (std::string &key) {
                 return kphf(key);
             };
             doPerformQueries(keys, x);
         }
 
-        void performTest(const std::span<std::string> keys) override {
-            auto x = [&] (std::string &key) {
-                return kphf(key);
-            };
-            doPerformTest(keys, x);
+        size_t keyValue(size_t key_index) override {
+            return kphf(keys[key_index]);
         }
 };
 

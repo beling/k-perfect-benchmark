@@ -21,7 +21,7 @@ class ThresholdBasedBumpingOldContender : public Contender {
             return std::string("ThresholdBasedBumpingOld");
         }
 
-        void construct(const std::vector<std::string> &keys) override {
+        void construct() override {
             // Other competitors hash keys internally. This competitor was
             // never meant to be used as standalone, so we have to do it from the outside.
             std::vector<uint64_t> hashedKeys;
@@ -35,18 +35,15 @@ class ThresholdBasedBumpingOldContender : public Contender {
             return kphf->getBits();
         }
 
-        void performQueries(const std::span<std::string> keys) override {
+        void performQueries() override {
             auto x = [&] (std::string &key) {
                 return kphf->operator()(bytehamster::util::MurmurHash64(key));
             };
             doPerformQueries(keys, x);
         }
 
-        void performTest(const std::span<std::string> keys) override {
-            auto x = [&] (std::string &key) {
-                return kphf->operator()(bytehamster::util::MurmurHash64(key));
-            };
-            doPerformTest(keys, x);
+        size_t keyValue(size_t key_index) override {
+            kphf->operator()(bytehamster::util::MurmurHash64(keys[key_index]))
         }
 };
 

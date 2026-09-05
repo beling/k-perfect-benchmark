@@ -1,34 +1,20 @@
 #include "Contender.h"
 
-#include <bytehamster/util/XorShift64.h>
 #include <unistd.h>
-#include <thread>
 
-std::vector<std::string> generateInputData(size_t N, size_t seed) {
+std::vector<std::string> generateInputData(size_t N, uint64_t seed) {
     std::vector<std::string> inputData;
     inputData.reserve(N);
-    bytehamster::util::XorShift64 prng(seed);
-    std::cout<<"Generating input"<<std::flush;
-    char string[200];
-    for (size_t i = 0; i < N; i++) {
-        if ((i % (N/5)) == 0) {
-            std::cout<<"\rGenerating input: "<<100l*i/N<<"%"<<std::flush;
-        }
-        size_t length = 10 + prng((30 - 10) * 2);
-        for (std::size_t k = 0; k < (length + sizeof(uint64_t))/sizeof(uint64_t); ++k) {
-            ((uint64_t*) string)[k] = prng();
-        }
-        // Repair null bytes
-        for (std::size_t k = 0; k < length; ++k) {
-            if (string[k] == 0) {
-                string[k] = 1 + prng(254);
-            }
-        }
-        string[length] = 0;
+    generateInputDataTo(N, seed, [&](const char* string, std::size_t length) {
         inputData.emplace_back(string, length);
-    }
-    std::cout<<"\rInput generation complete."<<std::endl;
+    });
     return inputData;
+}
+
+void Contender::generateKeys(uint64_t seed) {
+    keys = generateInputData(N, seed);
+    //auto rng = std::default_random_engine {};
+    //std::shuffle(std::begin(keys), std::end(keys), rng);
 }
 
 void Contender::run(bool shouldPrintResult) {
@@ -38,8 +24,8 @@ void Contender::run(bool shouldPrintResult) {
     }
     std::cout << std::endl;
     std::cout << "Contender: " << name().substr(0, name().find(' ')) << ", seed " << seed << std::endl;
-    std::vector<std::string> keys = generateInputData(N, seed);
-    beforeConstruction(keys);
+    generateKeys(seed);
+    beforeConstruction();
 
     std::cout << "Cooldown" << std::endl;
     usleep(1000*1000);
@@ -47,7 +33,7 @@ void Contender::run(bool shouldPrintResult) {
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     try {
-        construct(keys);
+        construct();
     } catch (const std::exception& e) {
         std::cout<<"Error: "<<e.what()<<std::endl;
         return;
@@ -57,42 +43,20 @@ void Contender::run(bool shouldPrintResult) {
 
     if (!skipTests) {
         std::cout<<"Testing"<<std::endl;
-        performTest(keys);
+        performTest();
     }
 
     queryTimeMilliseconds = 0;
     if (numQueries > 0) {
-        std::cout<<"Preparing query plan"<<std::endl;
-        std::vector<std::string> queryPlan;
-        queryPlan.reserve(numQueries * numQueryThreads);
-        bytehamster::util::XorShift64 prng(time(nullptr));
-        for (size_t i = 0; i < numQueries * numQueryThreads; i++) {
-            queryPlan.push_back(keys[prng(N)]);
-        }
         std::cout << "Cooldown" << std::endl;
-        usleep(1000*1000);
+        usleep(4*1000*1000);
         std::cout<<"Querying"<<std::endl;
-        if (numQueryThreads == 1) {
-            begin = std::chrono::steady_clock::now();
-            performQueries(queryPlan);
-            end = std::chrono::steady_clock::now();
-            queryTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        } else {
-            std::vector<std::thread> threads;
-            begin = std::chrono::steady_clock::now();
-            for (size_t i = 0; i < numQueryThreads; i++) {
-                std::span<std::string> querySpan(queryPlan.begin() + i * numQueries,
-                                                 queryPlan.begin() + (i + 1) * numQueries);
-                threads.emplace_back([&querySpan, this] {
-                    performQueries(querySpan);
-                });
-            }
-            for (size_t i = 0; i < numQueryThreads; i++) {
-                threads.at(i).join();
-            }
-            end = std::chrono::steady_clock::now();
-            queryTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        }
+        //for (size_t i = 0; i < numQueries/3; ++i)
+        performQueries();
+        begin = std::chrono::steady_clock::now();
+        for (size_t i = 0; i < numQueries; ++i) performQueries();
+        end = std::chrono::steady_clock::now();
+        queryTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
     }
     if (shouldPrintResult) {
         printResult();
@@ -110,8 +74,8 @@ void Contender::printResult(std::string additional) {
                                     ? std::to_string(0.001 * constructionTimeMicroseconds)
                                     : std::to_string(constructionTimeMicroseconds / 1000))
               << " queryTimeMilliseconds=" << queryTimeMilliseconds
-              << " numQueries=" << numQueries
-              << " numQueriesTotal=" << (numQueries * numQueryThreads)
+              << " numQueries=" << (numQueries * N)
+              << " numQueriesTotal=" << (numQueries * N * numQueryThreads)
               << " N=" << N
               << " loadFactor=" << loadFactor
               << " threads=" << numThreads
@@ -120,7 +84,7 @@ void Contender::printResult(std::string additional) {
               << std::endl;
 }
 
-size_t Contender::numQueries = 1e6;
+size_t Contender::numQueries = 1;
 size_t Contender::numThreads = 1;
 size_t Contender::numQueryThreads = 1;
 size_t Contender::seed = 0;

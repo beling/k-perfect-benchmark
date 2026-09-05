@@ -24,7 +24,7 @@ class KRecSplitContender : public Contender {
                     + " bucketSize=" + std::to_string(bucketSize);
         }
 
-        void construct(const std::vector<std::string> &keys) override {
+        void construct() override {
             kphf = new kPHF(keys, bucketSize);
         }
 
@@ -32,18 +32,15 @@ class KRecSplitContender : public Contender {
             return kphf->bitCount();
         }
 
-        void performQueries(const std::span<std::string> keys) override {
+        void performQueries() override {
             auto x = [&] (std::string &key) {
                 return kphf->operator()(key);
             };
             doPerformQueries(keys, x);
         }
 
-        void performTest(const std::span<std::string> keys) override {
-            auto x = [&] (std::string &key) {
-                return kphf->operator()(key);
-            };
-            doPerformTest(keys, x);
+        size_t keyValue(size_t key_index) override {
+            return kphf->operator()(keys[key_index]);
         }
 };
 

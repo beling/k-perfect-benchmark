@@ -1,6 +1,7 @@
 cmake-build-*
 .idea
 .spack-env
+.cache
 spack.lock
 out
 build

@@ -17,7 +17,7 @@ class PaCHashContender : public Contender {
                     + " a=" + std::to_string(a);
         }
 
-        void construct(const std::vector<std::string> &keys) override {
+        void construct() override {
             kphf = kphf::PaCHash::PaCHash(k_contender, a, keys);
         }
 
@@ -25,18 +25,15 @@ class PaCHashContender : public Contender {
             return kphf.count_bits();
         }
 
-        void performQueries(const std::span<std::string> keys) override {
+        void performQueries() override {
             auto x = [&] (const std::string &key) {
                 return kphf(key);
             };
             doPerformQueries(keys, x);
         }
 
-        void performTest(const std::span<std::string> keys) override {
-            auto x = [&] (const std::string &key) {
-                return kphf(key);
-            };
-            doPerformTest(keys, x);
+        size_t keyValue(size_t key_index) override {
+            return kphf(keys[key_index]);
         }
 };
 
