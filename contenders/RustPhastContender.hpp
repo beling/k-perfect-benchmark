@@ -31,7 +31,7 @@ class RustPhastContender : public RustContender {
         }
 
         std::string name() override {
-            return std::string("RustPHast")
+            return std::string("kPHast")
                 + " bits_per_seed=" + std::to_string(bits_per_seed)
                 + " bucket_size100=" + std::to_string(bucket_size100)
                 + " encoder=" + (use_ef ? "EF" : "C");

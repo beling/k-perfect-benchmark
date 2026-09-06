@@ -1,4 +1,4 @@
-use ph::{GetSize, phast::{self, Conf, DefaultCompressedArray, GenericCore, SeedOnlyK, SeedOnlyKCore, compressed_array::CompactFast}};
+use ph::{GetSize, phast::{self, bucket_size_normalization_multiplier, Conf, DefaultCompressedArray, GenericCore, SeedOnlyK, SeedOnlyKCore, compressed_array::CompactFast}};
 use std::hint::black_box;
 
 pub enum PHastVariant {
@@ -18,7 +18,8 @@ pub extern "C" fn createPhastStruct() -> *mut PHastVariant {
 
 #[no_mangle]
 pub extern "C" fn constructPhast(struct_ptr: *mut PHastVariant, keys_ptr: *const Box<[Box<[u8]>]>,
-                                 k: u16, bits_per_seed: u8, bucket_size100: u16, threads_num: usize, ef: bool) {
+                                 k: u16, bits_per_seed: u8, mut bucket_size100: u16, threads_num: usize, ef: bool) {
+    bucket_size100 = (bucket_size_normalization_multiplier(k) * bucket_size100 as f64) as u16;
     let f = unsafe { &mut *struct_ptr };
     let keys = unsafe { &*keys_ptr };
     *f = match (bits_per_seed, ef) {
