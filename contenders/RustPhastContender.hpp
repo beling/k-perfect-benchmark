@@ -6,25 +6,11 @@
 
 extern "C" {
     void *createPhastStruct();
-    void constructPhast(void *rustStruct, void *keysStruct, uint8_t bits_per_seed, uint16_t bucket_size100, size_t threads, bool ef);
+    void constructPhast(void *rustStruct, void *keysStruct, uint16_t k, uint8_t bits_per_seed, uint16_t bucket_size100, size_t threads, bool ef);
     uint64_t queryPhast(void *rustStruct, void *keysStruct, size_t index);
     void queryPhastAll(void *rustStruct, void *keysStruct);
     size_t sizePhast(void *rustStruct);
     void destroyPhastStruct(void *rustStruct);
-
-    void *createPhastPlusStruct();
-    void constructPhastPlus(void *rustStruct, void *keysStruct, uint8_t bits_per_seed, uint16_t bucket_size100, size_t threads, bool ef);
-    uint64_t queryPhastPlus(void *rustStruct, void *keysStruct, size_t index);
-    void queryPhastPlusAll(void *rustStruct, void *keysStruct);
-    size_t sizePhastPlus(void *rustStruct);
-    void destroyPhastPlusStruct(void *rustStruct);
-
-    void *createPhastPlusWrappedStruct();
-    void constructPhastPlusWrapped(void *rustStruct, void *keysStruct, uint8_t multiplier, uint8_t bits_per_seed, uint16_t bucket_size100, uint16_t preferred_slice_len, size_t threads, bool ef);
-    uint64_t queryPhastPlusWrapped(void *rustStruct, void *keysStruct, size_t index);
-    void queryPhastPlusWrappedAll(void *rustStruct, void *keysStruct);
-    size_t sizePhastPlusWrapped(void *rustStruct);
-    void destroyPhastPlusWrappedStruct(void *rustStruct);
 }
 
 class RustPhastContender : public RustContender {
@@ -52,7 +38,7 @@ class RustPhastContender : public RustContender {
         }
 
         void construct() override {
-            constructPhast(rustStruct, keysRustWrapper, bits_per_seed, bucket_size100, numThreads, use_ef);
+            constructPhast(rustStruct, keysRustWrapper, k_contender, bits_per_seed, bucket_size100, numThreads, use_ef);
         }
 
         size_t sizeBits() override {
