@@ -6,7 +6,7 @@
 
 extern "C" {
     void *createPhastStruct();
-    void constructPhast(void *rustStruct, void *keysStruct, uint16_t k, uint8_t bits_per_seed, uint16_t bucket_size100, size_t threads, bool ef);
+    void constructPhast(void *rustStruct, void *keysStruct, uint16_t k, uint8_t bits_per_seed, uint32_t bucket_size100, size_t threads, bool ef);
     uint64_t queryPhast(void *rustStruct, void *keysStruct, size_t index);
     void queryPhastAll(void *rustStruct, void *keysStruct);
     size_t sizePhast(void *rustStruct);
@@ -17,11 +17,11 @@ class RustPhastContender : public RustContender {
     protected:
         void *rustStruct = nullptr;
         uint8_t bits_per_seed;
-        uint16_t bucket_size100;
+        uint32_t bucket_size100;
         bool use_ef;
     public:
         // bucket_size100 is bucket size * 100, 0 for torbo
-        RustPhastContender(size_t N, const size_t k, uint8_t bits_per_seed, uint16_t bucket_size100, bool use_ef)
+        RustPhastContender(size_t N, const size_t k, uint8_t bits_per_seed, uint32_t bucket_size100, bool use_ef)
             : RustContender(N, k), bits_per_seed(bits_per_seed), bucket_size100(bucket_size100), use_ef(use_ef) {
             rustStruct = createPhastStruct();
         }
