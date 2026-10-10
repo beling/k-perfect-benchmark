@@ -1,5 +1,6 @@
 #include <tlx/cmdline_parser.hpp>
 
+#include "RustPhastContender.hpp"
 #include "ChdContender.hpp"
 #include "HashDisplaceContender.hpp"
 #include "PaCHashContender.hpp"
@@ -11,6 +12,9 @@
 int main(int argc, char** argv) {
     size_t N = 5e6;
     size_t k = 8;
+    bool phast = false;
+    bool phastef = false;
+    bool phastc = false;
     bool chd = false;
     bool hashdisplace = false;
     bool pachash = false;
@@ -27,6 +31,9 @@ int main(int argc, char** argv) {
     cmd.add_bytes('s', "seed", Contender::seed, "Seed for random inputs");
     cmd.add_bytes('k', "k", k, "Number of collisions per output value");
 
+    cmd.add_flag("phast", phast, "Execute kPHast benchmark - all");
+    cmd.add_flag("phastef", phastef, "Execute kPHast benchmark with Elias-Fano");
+    cmd.add_flag("phastc", phastc, "Execute kPHast benchmark with Compact");
     cmd.add_flag("chd", chd, "Execute CHD benchmark");
     cmd.add_flag("hashDisplace", hashdisplace, "Execute hash displace benchmark");
     cmd.add_flag("pachash", pachash, "Execute PaCHash benchmark");
@@ -37,6 +44,12 @@ int main(int argc, char** argv) {
 
     if (!cmd.process(argc, argv)) {
         return 1;
+    }
+    if (phast || phastef) {
+        rustPHastContenderRunnerWithEf(N, k, true);
+    }
+    if (phast || phastc) {
+        rustPHastContenderRunnerWithEf(N, k, false);
     }
     if (chd) {
         chdContenderRunner(N, k, 0.97);

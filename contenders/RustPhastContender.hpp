@@ -54,6 +54,6 @@ class RustPhastContender : public RustContender {
         }
 };
 
-void rustPHastContenderRunnerWithEf(size_t N, bool use_ef);
+void rustPHastContenderRunnerWithEf(size_t N, const size_t k, bool use_ef);
 
-void rustPHastContenderRunner(size_t N);
+void rustPHastContenderRunner(size_t N, const size_t k);
