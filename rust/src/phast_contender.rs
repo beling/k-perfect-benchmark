@@ -4,10 +4,10 @@ use std::hint::black_box;
 pub enum PHastVariant {
     BitsEF(phast::KFunction<GenericCore, ph::seeds::BitsFast, SeedOnlyKCore, DefaultCompressedArray>),
     Bits8EF(phast::KFunction<GenericCore, ph::seeds::Bits8, SeedOnlyKCore, DefaultCompressedArray>),
-    //Bits4EF(phast::KFunction<GenericCore, ph::seeds::TwoToPowerBitsStatic::<2>, SeedOnlyKCore, DefaultCompressedArray>),
+    Bits4EF(phast::KFunction<GenericCore, ph::seeds::TwoToPowerBitsStatic::<2>, SeedOnlyKCore, DefaultCompressedArray>),
     BitsC(phast::KFunction<GenericCore, ph::seeds::BitsFast, SeedOnlyKCore, CompactFast>),
     Bits8C(phast::KFunction<GenericCore, ph::seeds::Bits8, SeedOnlyKCore, CompactFast>),
-    //Bits4C(phast::KFunction<GenericCore, ph::seeds::TwoToPowerBitsStatic::<2>, SeedOnlyKCore, CompactFast>),
+    Bits4C(phast::KFunction<GenericCore, ph::seeds::TwoToPowerBitsStatic::<2>, SeedOnlyKCore, CompactFast>),
     None
 }
 
@@ -35,6 +35,18 @@ pub extern "C" fn constructPhast(struct_ptr: *mut PHastVariant, keys_ptr: *const
             threads_num,
             SeedOnlyK::new(k)
         )),
+        (4, true) => PHastVariant::Bits4EF(phast::KFunction::with_slice_conf_threads_sc(
+            &keys[..],
+            Conf::generic4(bucket_size100),
+            threads_num,
+            SeedOnlyK::new(k)
+        )),
+        (4, false) => PHastVariant::Bits4C(phast::KFunction::with_slice_conf_threads_sc(
+            &keys[..],
+            Conf::generic4(bucket_size100),
+            threads_num,
+            SeedOnlyK::new(k)
+        )),
         (_, true) => PHastVariant::BitsEF(phast::KFunction::with_slice_conf_threads_sc(
             &keys[..],
             Conf::generic(ph::seeds::BitsFast(bits_per_seed), bucket_size100),
@@ -57,10 +69,10 @@ pub extern "C" fn queryPhast(struct_ptr: *const PHastVariant, keys_ptr: *const B
     match unsafe { &*struct_ptr } {
         PHastVariant::BitsEF(function) => function.get(key) as u64,
         PHastVariant::Bits8EF(function) => function.get(key) as u64,
-        //PHastVariant::Bits4EF(function) => function.get(key) as u64,
+        PHastVariant::Bits4EF(function) => function.get(key) as u64,
         PHastVariant::BitsC(function) => function.get(key) as u64,
         PHastVariant::Bits8C(function) => function.get(key) as u64,
-        //PHastVariant::Bits4C(function) => function.get(key) as u64,
+        PHastVariant::Bits4C(function) => function.get(key) as u64,
         PHastVariant::None => panic!("kPHast not constructed yet"),
     }
 }
@@ -81,14 +93,14 @@ pub extern "C" fn queryPhastAll(struct_ptr: *const PHastVariant, keys_ptr: *cons
             for key in keys { black_box(function.get(key.as_ref())); },
         PHastVariant::Bits8EF(function) =>  //query_all(function, &keys),
             for key in keys { black_box(function.get(key.as_ref())); },
-        //PHastVariant::Bits4EF(function) =>  //query_all(function, &keys),
-        //    for key in keys { black_box(function.get(key.as_ref())); },
+        PHastVariant::Bits4EF(function) =>  //query_all(function, &keys),
+            for key in keys { black_box(function.get(key.as_ref())); },
         PHastVariant::BitsC(function) => //query_all(function, &keys),
             for key in keys { black_box(function.get(key.as_ref())); },
         PHastVariant::Bits8C(function) => //query_all(function, &keys),
             for key in keys { black_box(function.get(key.as_ref())); },
-        //PHastVariant::Bits4C(function) => //query_all(function, &keys),
-        //    for key in keys { black_box(function.get(key.as_ref())); },
+        PHastVariant::Bits4C(function) => //query_all(function, &keys),
+            for key in keys { black_box(function.get(key.as_ref())); },
         PHastVariant::None => panic!("PHast not constructed yet"),
     }
 }
@@ -98,10 +110,10 @@ pub extern "C" fn sizePhast(struct_ptr: *const PHastVariant) -> usize {
     match unsafe { &*struct_ptr } {
         PHastVariant::BitsEF(function) => function.size_bytes(),
         PHastVariant::Bits8EF(function) => function.size_bytes(),
-        //PHastVariant::Bits4EF(function) => function.size_bytes(),
+        PHastVariant::Bits4EF(function) => function.size_bytes(),
         PHastVariant::BitsC(function) => function.size_bytes(),
         PHastVariant::Bits8C(function) => function.size_bytes(),
-        //PHastVariant::Bits4C(function) => function.size_bytes(),
+        PHastVariant::Bits4C(function) => function.size_bytes(),
         PHastVariant::None => panic!("PHast not constructed yet"),
     }
 }
