@@ -24,6 +24,9 @@ void rustPHastContenderRunnerWithEf(size_t N, const size_t k, bool use_ef) {
 
     for (size_t bucket_size_100 = 420; bucket_size_100 <= 520; bucket_size_100 += 5)
         RustPhastContender(N, k, 9, bucket_size_100, use_ef).run();
+
+    for (size_t bucket_size_100 = 490; bucket_size_100 <= 590; bucket_size_100 += 5)
+        RustPhastContender(N, k, 10, bucket_size_100, use_ef).run();
 }
 
 void rustPHastContenderRunner(size_t N, const size_t k) {
